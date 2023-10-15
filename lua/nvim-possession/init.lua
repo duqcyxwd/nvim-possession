@@ -36,13 +36,17 @@ M.setup = function(user_opts)
 
 		local name = vim.fn.input("name: ")
 		if name ~= "" then
-			if next(vim.fs.find(name, { path = user_config.sessions.sessions_path })) == nil then
-				vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. name } })
-				vim.g[user_config.sessions.sessions_variable] = vim.fs.basename(name)
-				print("saved in: " .. user_config.sessions.sessions_path .. name)
-			else
-				print("session already exists")
-			end
+			vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. name }, bang = true })
+			vim.g[user_config.sessions.sessions_variable] = vim.fs.basename(name)
+			print("saved in: " .. user_config.sessions.sessions_path .. name)
+
+			-- if next(vim.fs.find(name, { path = user_config.sessions.sessions_path })) == nil then
+			-- 	vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. name } })
+			-- 	vim.g[user_config.sessions.sessions_variable] = vim.fs.basename(name)
+			-- 	print("saved in: " .. user_config.sessions.sessions_path .. name)
+			-- else
+			-- 	print("session already exists")
+			-- end
 		end
 	end
 
@@ -78,11 +82,28 @@ M.setup = function(user_opts)
 	end
 	fzf.config.set_action_helpstr(M.load, "load-session")
 
+	M.load_last = function(selected)
+		local session = user_config.sessions.sessions_path .. "_last"
+		if user_config.autoswitch.enable and vim.g[user_config.sessions.sessions_variable] ~= nil then
+			utils.autoswitch(user_config)
+		end
+		vim.cmd.source(session)
+		vim.g[user_config.sessions.sessions_variable] = vim.fs.basename(session)
+		if type(user_config.post_hook) == "function" then
+			user_config.post_hook()
+		end
+	end
+
+	M.autoload = function()
+		utils.autoload(user_config)
+	end
+
 	---delete selected session
 	---@param selected string
 	M.delete_selected = function(selected)
 		local session = user_config.sessions.sessions_path .. selected[1]
-		local confirm = vim.fn.confirm("delete session?", "&Yes\n&No", 2)
+		-- local confirm = vim.fn.confirm("delete session?", "&Yes\n&No", 2)
+		local confirm = 1
 		if confirm == 1 then
 			os.remove(session)
 			print("deleted " .. session)
@@ -97,7 +118,8 @@ M.setup = function(user_opts)
 	M.delete = function()
 		local cur_session = vim.g[user_config.sessions.sessions_variable]
 		if cur_session ~= nil then
-			local confirm = vim.fn.confirm("delete session " .. cur_session .. "?", "&Yes\n&No", 2)
+			-- local confirm = vim.fn.confirm("delete session " .. cur_session .. "?", "&Yes\n&No", 2)
+			local confirm = 1
 			if confirm == 1 then
 				local session_path = user_config.sessions.sessions_path .. cur_session
 				os.remove(session_path)
@@ -156,6 +178,7 @@ M.setup = function(user_opts)
 			desc = "📌 save session on VimLeave",
 			callback = function()
 				utils.autosave(user_config)
+				utils.autosave_last(user_config)
 			end,
 		})
 	end
