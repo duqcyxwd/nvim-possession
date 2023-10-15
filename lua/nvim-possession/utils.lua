@@ -31,6 +31,9 @@ end
 M.session_in_cwd = function(sessions_path)
 	local session_dir, dir_pat = "", "^cd%s*"
 	for _, file in ipairs(vim.fn.readdir(sessions_path)) do
+		if file == "_last" then
+			goto continue
+		end
 		for line in io.lines(sessions_path .. file) do
 			if string.find(line, dir_pat) then
 				session_dir = vim.fs.normalize((line:gsub("cd%s*", "")))
@@ -39,6 +42,7 @@ M.session_in_cwd = function(sessions_path)
 				end
 			end
 		end
+	    ::continue::
 	end
 	return nil
 end
@@ -81,6 +85,16 @@ M.autosave = function(config)
 	if cur_session ~= nil then
 		vim.cmd.mksession({ args = { config.sessions.sessions_path .. cur_session }, bang = true })
 	end
+end
+
+---check if a session is loaded and save it automatically
+---without asking for prompt
+---@param config table
+M.autosave_last = function(config)
+	if type(config.save_hook) == "function" then
+		config.save_hook()
+	end
+	vim.cmd.mksession({ args = { config.sessions.sessions_path .. "_last" }, bang = true })
 end
 
 ---before switching session perform the following:
