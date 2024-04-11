@@ -28,7 +28,8 @@ end
 ---return the first session whose dir corresponds to cwd
 ---@param sessions_path string
 ---@return string|nil
-M.session_in_cwd = function(sessions_path)
+M.session_in_cwd = function(sessions_path, dir)
+	dir = dir or vim.fn.getcwd()
 	local session_dir, dir_pat = "", "^cd%s*"
 	for _, file in ipairs(vim.fn.readdir(sessions_path)) do
 		if file == "_last" then
@@ -37,13 +38,26 @@ M.session_in_cwd = function(sessions_path)
 		for line in io.lines(sessions_path .. file) do
 			if string.find(line, dir_pat) then
 				session_dir = vim.fs.normalize((line:gsub("cd%s*", "")))
-				if session_dir == vim.fn.getcwd() then
+				if session_dir == dir then
 					return file
 				end
 			end
 		end
 	    ::continue::
 	end
+	return nil
+end
+
+M.dir_in_session = function(session_file)
+	local session_dir, dir_pat = "", "^cd%s*"
+
+	for line in io.lines(session_file) do
+		if string.find(line, dir_pat) then
+			session_dir = vim.fs.normalize((line:gsub("cd%s*", "")))
+			return session_dir
+		end
+	end
+
 	return nil
 end
 
