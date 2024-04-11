@@ -53,17 +53,26 @@ M.setup = function(user_opts)
 	---update loaded session with current status
 	M.update = function()
 		local cur_session = vim.g[user_config.sessions.sessions_variable]
-		if cur_session ~= nil then
-			local confirm = vim.fn.confirm("overwrite session?", "&Yes\n&No", 2)
-			if confirm == 1 then
-				if type(user_config.save_hook) == "function" then
-					user_config.save_hook()
-				end
-				vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. cur_session }, bang = true })
-				print("updated session: " .. cur_session)
+
+		if cur_session == nil then
+			-- Search current session from session file
+			local cur_session =  utils.session_in_cwd(user_config.sessions.sessions_path)
+			if cur_session == nil then
+				M.new()
+				return
 			end
-		else
-			print("no session loaded")
+
+			vim.g[user_config.sessions.sessions_variable] = cur_session
+		end
+
+
+		-- local confirm = vim.fn.confirm("overwrite session?", "&Yes\n&No", 2)
+		if confirm == 1 then
+			if type(user_config.save_hook) == "function" then
+				user_config.save_hook()
+			end
+			vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. cur_session }, bang = true })
+			print("updated session: " .. cur_session)
 		end
 	end
 
@@ -82,8 +91,14 @@ M.setup = function(user_opts)
 	end
 	fzf.config.set_action_helpstr(M.load, "load-session")
 
-	M.load_last = function(selected)
-		local session = user_config.sessions.sessions_path .. "_last"
+	M.load_last = function()
+
+		local last_session = user_config.sessions.sessions_path .. "_last"
+		local dir = utils.dir_in_session(last_session)
+		local matched_session = utils.session_in_cwd(user_config.sessions.sessions_path, dir)
+
+		local session = user_config.sessions.sessions_path .. (matched_session or "_last")
+
 		if user_config.autoswitch.enable and vim.g[user_config.sessions.sessions_variable] ~= nil then
 			utils.autoswitch(user_config)
 		end
@@ -162,6 +177,7 @@ M.setup = function(user_opts)
 			actions = {
 				["default"] = M.load,
 				["ctrl-x"] = { M.delete_selected, fzf.actions.resume },
+				["ctrl-d"] = { M.delete_selected, fzf.actions.resume },
 			},
 		})
 	end
