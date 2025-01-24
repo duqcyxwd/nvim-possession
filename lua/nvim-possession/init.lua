@@ -195,7 +195,6 @@ M.setup = function(user_opts)
 			desc = "📌 save session on VimLeave",
 			callback = function()
 				utils.autosave(user_config)
-				utils.autosave_last(user_config)
 			end,
 		})
 	end

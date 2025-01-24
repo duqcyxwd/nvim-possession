@@ -96,19 +96,12 @@ M.autosave = function(config)
 	if type(config.save_hook) == "function" then
 		config.save_hook()
 	end
+
 	if cur_session ~= nil then
 		vim.cmd.mksession({ args = { config.sessions.sessions_path .. cur_session }, bang = true })
 	end
-end
-
----check if a session is loaded and save it automatically
----without asking for prompt
----@param config table
-M.autosave_last = function(config)
-	if type(config.save_hook) == "function" then
-		config.save_hook()
-	end
 	vim.cmd.mksession({ args = { config.sessions.sessions_path .. "_last" }, bang = true })
+	vim.cmd.mksession({ args = { config.sessions.sessions_path .. "/history/" .. os.date("%Y_%m_%d_%H_%M") }, bang = true })
 end
 
 ---before switching session perform the following:
