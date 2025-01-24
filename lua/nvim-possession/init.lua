@@ -56,7 +56,7 @@ M.setup = function(user_opts)
 
 		if cur_session == nil then
 			-- Search current session from session file
-			local cur_session =  utils.session_in_cwd(user_config.sessions.sessions_path)
+			cur_session =  utils.session_in_cwd(user_config.sessions.sessions_path)
 			if cur_session == nil then
 				M.new()
 				return
@@ -67,12 +67,13 @@ M.setup = function(user_opts)
 
 
 		-- local confirm = vim.fn.confirm("overwrite session?", "&Yes\n&No", 2)
+		local confirm = 1
 		if confirm == 1 then
 			if type(user_config.save_hook) == "function" then
 				user_config.save_hook()
 			end
 			vim.cmd.mksession({ args = { user_config.sessions.sessions_path .. cur_session }, bang = true })
-			print("updated session: " .. cur_session)
+			print("updating session: " .. cur_session)
 		end
 	end
 
